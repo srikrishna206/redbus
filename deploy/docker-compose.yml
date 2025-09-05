@@ -1,0 +1,37 @@
+# deploy/docker-compose.yml - production (uses images created by CI)
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    image: yourdockerhubusername/redbus-backend:latest    # replaced by CI or change tag
+    container_name: redbus-backend
+    env_file:
+      - /home/deploy/back-end-redbus/.env    # path on deployment host
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+    networks:
+      - redbus-net
+
+  frontend:
+    image: yourdockerhubusername/redbus-frontend:latest
+    container_name: redbus-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - redbus-net
+
+volumes:
+  mongo-data:
+
+networks:
+  redbus-net:
+    driver: bridge
