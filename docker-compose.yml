@@ -1,0 +1,43 @@
+# docker-compose.yml - for development / local testing (it uses build:)
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: .
+      dockerfile: back-end-redbus/Dockerfile
+    container_name: redbus-backend
+    env_file:
+      - back-end-redbus/.env
+    depends_on:
+      - mongo
+    ports:
+      - "5000:5000"
+    networks:
+      - redbus-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: front-end-redbus/Dockerfile
+      args:
+        REACT_APP_API_URL: http://backend:5000
+    container_name: redbus-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - redbus-net
+
+volumes:
+  mongo-data:
+
+networks:
+  redbus-net:
+    driver: bridge
